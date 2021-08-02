@@ -1,0 +1,19 @@
+{
+  "name": "dotnet-thailand-azure-functions",
+  "version": "0.0.1",
+  "license": "MIT",
+  "scripts": {
+    "build": "tsc",
+    "build:production": "yarn run prestart",
+    "watch": "tsc --w",
+    "prestart": "yarn run build && func extensions install",
+    "start:host": "func start",
+    "start": "npm-run-all --parallel start:host watch"
+  },
+  "description": "",
+  "devDependencies": {
+    "@azure/functions": "^1.0.1-beta1",
+    "npm-run-all": "^4.1.5",
+    "typescript": "^3.3.3"
+  }
+}
