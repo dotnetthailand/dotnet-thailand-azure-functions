@@ -54,7 +54,7 @@ jobs:
 
         # To fix a warning revert back to previous version back https://github.com/Azure/functions-action/issues/86#issuecomment-850996814
       - name: Deploy Node.js app to Azure Functions
-        uses: Azure/functions-action@v1.4.0 # https://github.com/Azure/functions-action
+        uses: Azure/functions-action@v1.3.2 # https://github.com/Azure/functions-action
         with:
           app-name: ${{ secrets.AZURE_FUNCTIONS_APP_NAME }}
           package: ${{ env.AZURE_FUNCTIONS_APP_PACKAGE_PATH }}
