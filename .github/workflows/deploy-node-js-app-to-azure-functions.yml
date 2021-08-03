@@ -52,7 +52,7 @@ jobs:
           yarn install
           yarn run build:production
 
-        # For warning revert back to previous version back https://github.com/Azure/functions-action/issues/86#issuecomment-850996814
+        # To fix a warning revert back to previous version back https://github.com/Azure/functions-action/issues/86#issuecomment-850996814
       - name: Deploy Node.js app to Azure Functions
         uses: Azure/functions-action@v1 # https://github.com/Azure/functions-action
         with:
