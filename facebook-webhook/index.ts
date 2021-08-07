@@ -3,62 +3,25 @@ import axios from 'axios';
 import { v4 as uuidv4 } from 'uuid';
 
 const httpTrigger: AzureFunction = async function (context: Context, req: HttpRequest): Promise<void> {
-
   // Parse the query params
   // https://developers.facebook.com/docs/messenger-platform/getting-started/webhook-setup/
   const mode = req.query['hub_mode'] ?? '';
   const token = req.query['hub_verify_token'] ?? '';
   const challenge = req.query['hub.challenge'] ?? '';
-  context.log(`mode: ${mode}, token: ${token}, challenge: ${challenge}`);
-  context.log(`body: ${req.body}`);
-  context.log(`body: ${JSON.stringify(req.body, null, 2)}`);
 
-  // comment
-  // {
-  //   "field": "plugin_comment",
-  //   "value": {
-  //     "created_time": "2021-08-03T09:44:47+0000",
-  //     "message": "Test Comment",
-  //     "from": {
-  //       "name": "Test User",
-  //       "id": "4444444444"
-  //     },
-  //     "id": "4444444444_4444444444"
-  //   }
-  // }
+  const entry = req.body?.entry?.find(e => e);
+  const comment = entry?.changes?.find(c => c.field === 'plugin_comment');
+  const commentId: string = comment.value.id;
+  const [commentParentId, commentChildId] = commentId.split('_');
 
-  // reply comment
-  // {
-  //   "field": "plugin_comment_reply",
-  //   "value": {
-  //     "created_time": "2021-08-03T09:46:10+0000",
-  //     "message": "Test Comment",
-  //     "from": {
-  //       "name": "Test User",
-  //       "id": "4444444444"
-  //     },
-  //     "id": "4444444444_4444444444",
-  //     "parent": {
-  //       "created_time": "2021-07-22T19:59:30+0000",
-  //       "message": "Test Parent Comment",
-  //       "from": {
-  //         "name": "Test User 1",
-  //         "id": "4444444444"
-  //       },
-  //       "id": "4444444444_44444444"
-  //     }
-  //   }
-  // }
-
-
-  // Event value must be numeric.
   try {
     const response = await trackEvent(
       'Comment',
       'Create',
-      '',
-      100
+      commentParentId,
+      Number.parseInt(commentChildId) // Event value must be numeric.
     );
+
     context.log(JSON.stringify(response.data, null, 2));
     // https://github.com/Azure/azure-functions-nodejs-worker/blob/v2.x/src/http/Response.ts#L8
     context.res = {
@@ -82,7 +45,6 @@ const httpTrigger: AzureFunction = async function (context: Context, req: HttpRe
       body: error
     };
   }
-
 };
 
 function trackEvent(category: string, action: string, label: string, value: number) {
@@ -90,7 +52,6 @@ function trackEvent(category: string, action: string, label: string, value: numb
   // The following environment variable is set by app.yaml when running on App
   // Engine, but will need to be set manually when running locally. See README.md.
   const { UA_TRACKING_ID } = process.env;
-  console.log(`UA_TRACKING_ID ${UA_TRACKING_ID}`);
 
   const data: Record<string, string> = {
     // API Version.
