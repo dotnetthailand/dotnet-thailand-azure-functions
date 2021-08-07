@@ -1,6 +1,6 @@
 import { AzureFunction, Context, HttpRequest } from "@azure/functions"
 import axios from 'axios';
-import { uuid } from 'uuidv4';
+import { v4 as uuidv4 } from 'uuid';
 
 const httpTrigger: AzureFunction = async function (context: Context, req: HttpRequest): Promise<void> {
 
@@ -9,8 +9,9 @@ const httpTrigger: AzureFunction = async function (context: Context, req: HttpRe
   const mode = req.query['hub_mode'] ?? '';
   const token = req.query['hub_verify_token'] ?? '';
   const challenge = req.query['hub.challenge'] ?? '';
-  console.log(`mode: ${mode}, token: ${token}, challenge: ${challenge}`);
+  context.log(`mode: ${mode}, token: ${token}, challenge: ${challenge}`);
   context.log(`body: ${req.body}`);
+  context.log(`body: ${JSON.stringify(req.body, null, 2)}`);
 
   // comment
   // {
@@ -53,12 +54,12 @@ const httpTrigger: AzureFunction = async function (context: Context, req: HttpRe
   // Event value must be numeric.
   try {
     const response = await trackEvent(
-      'Example category',
-      'Example action',
-      'Example label',
+      'Comment',
+      'Create',
+      '',
       100
     );
-    console.log(JSON.stringify(response.data, null, 2));
+    context.log(JSON.stringify(response.data, null, 2));
     // https://github.com/Azure/azure-functions-nodejs-worker/blob/v2.x/src/http/Response.ts#L8
     context.res = {
       headers: {
@@ -72,7 +73,7 @@ const httpTrigger: AzureFunction = async function (context: Context, req: HttpRe
     // This sample treats an event tracking error as a fatal error. Depending
     // on your application's needs, failing to track an event may not be
     // considered an error.
-    console.log(error);
+    context.log(error);
     context.res = {
       headers: {
         'Content-Type': 'application/json; charset=utf-8',
@@ -99,7 +100,7 @@ function trackEvent(category: string, action: string, label: string, value: numb
     tid: UA_TRACKING_ID,
     // Anonymous Client Identifier. Ideally, this should be a UUID that
     // is associated with particular user, device, or browser instance.
-    cid: uuid(),
+    cid: uuidv4(),
     // Event hit type.
     t: 'event',
     // Event category.
@@ -113,26 +114,21 @@ function trackEvent(category: string, action: string, label: string, value: numb
     ua: 'azure-functions'
   };
 
-  // const config = {
-  //   headers: {
-  //     // We need to use form-url encode https://github.com/openiddict/openiddict-core/issues/437
-  //     // https://datatracker.ietf.org/doc/html/rfc6749#section-4.1.3
-  //     'Content-Type': 'application/x-www-form-urlencoded'
-  //   }
-  // };
-
-  // Request token
-  // https://www.google-analytics.com/collect
+  const config = {
+    headers: {
+      // We need to use form-url encode https://github.com/openiddict/openiddict-core/issues/437
+      // https://datatracker.ietf.org/doc/html/rfc6749#section-4.1.3
+      'Content-Type': 'application/x-www-form-urlencoded'
+    }
+  };
 
 
-  // For debuging your requests you can use this URL:
+  // For debugging your requests you can use this URL:
   // /debug/collect
   // instead of
   // /collect
   // In response body you will see details.
-
-  return axios.post('https://www.google-analytics.com/collect', new URLSearchParams(data));
+  return axios.post('https://www.google-analytics.com/collect', new URLSearchParams(data), config);
 };
-
 
 export default httpTrigger;
